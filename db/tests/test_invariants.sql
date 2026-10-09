@@ -1,4 +1,4 @@
--- test_invariants.sql : tests des regles d'integrite IziLoyer (migrations V001-V010)
+y-- test_invariants.sql : tests des regles d'integrite IziLoyer (migrations V001-V010)
 -- Tout s'execute dans UNE transaction annulee a la fin (ROLLBACK) : la base reste propre.
 -- Fichier volontairement sans accents (compatibilite terminal Windows).
 \set ON_ERROR_STOP on
