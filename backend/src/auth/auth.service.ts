@@ -157,6 +157,14 @@ export class AuthService {
             [dto.nom, dto.prenoms, tel, dto.email ?? null, dto.role],
           );
           user = ins.rows[0];
+          // D16 : un nouveau bailleur demarre sa periode d'essai de 90 jours (3 baux actifs maximum)
+          if (user.role === 'PROPRIETAIRE') {
+            await c.query(
+              `INSERT INTO izl_t_owner_subscription (owner_id, statut, essai_fin)
+               VALUES ($1, 'ESSAI', (now() AT TIME ZONE 'Africa/Abidjan')::date + 90)`,
+              [user.id],
+            );
+          }
         }
         return { ok: true, session: await this.issueSession(c, user) };
       });

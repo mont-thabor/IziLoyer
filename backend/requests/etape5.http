@@ -1,0 +1,100 @@
+### ============================================================
+### IziLoyer - essais manuels de l'etape 5
+### Extension VS Code requise : "REST Client" (auteur : Huachao Mao)
+### Cliquer sur "Send Request" au-dessus de chaque bloc, DANS L'ORDRE.
+### ============================================================
+
+@host = http://localhost:3000
+@tel = 0700000001
+
+### 1. Demander un code (il s'affiche dans le terminal du serveur : ligne "SMS -> ...")
+POST {{host}}/auth/otp/request
+Content-Type: application/json
+
+{ "telephone": "{{tel}}" }
+
+### 2. Valider le code. REMPLACER 123456 par le code lu dans le terminal.
+# @name login
+POST {{host}}/auth/otp/verify
+Content-Type: application/json
+
+{
+  "telephone": "{{tel}}",
+  "code": "123456",
+  "nom": "Dezo",
+  "prenoms": "Yannick",
+  "role": "PROPRIETAIRE"
+}
+
+###
+@token = {{login.response.body.access_token}}
+
+### 3. Creer un site
+# @name site
+POST {{host}}/sites
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nom": "Residence Les Palmiers", "commune": "Cocody" }
+
+###
+@siteId = {{site.response.body.id}}
+
+### 4. Creer un local
+# @name local
+POST {{host}}/sites/{{siteId}}/locals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "designation": "Studio 1", "type": "Studio", "loyer_mensuel": 100000 }
+
+###
+@localId = {{local.response.body.id}}
+
+### 5. Lister les locaux (statut LIBRE / LOUE derive du bail)
+GET {{host}}/sites/{{siteId}}/locals
+Authorization: Bearer {{token}}
+
+### 6. Creer un bail AVEC avance, arrieres et caution.
+### Necessite un compte Wave actif pour le bailleur (voir l'etape "compte Wave de test" du guide).
+### Changer date_prise_effet : au plus tot le 1er du mois en cours.
+# @name bail
+POST {{host}}/leases
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "local_id": {{localId}},
+  "locataire_telephone": "0500000001",
+  "locataire_nom": "Kouassi",
+  "locataire_prenoms": "Awa",
+  "date_prise_effet": "2026-10-01",
+  "jour_limite": 5,
+  "avance": 60000,
+  "arrieres": [
+    { "libelle": "Arrieres 2025", "montant": 50000, "date_limite": "2026-10-15" }
+  ],
+  "caution": { "montant": 100000, "date_reception": "2026-10-01", "mode": "especes" }
+}
+
+###
+@leaseId = {{bail.response.body.id}}
+
+### 7. Dette detaillee (ordre FIFO : arrieres d'abord, puis loyers)
+GET {{host}}/leases/{{leaseId}}/debt
+Authorization: Bearer {{token}}
+
+### 8. Fiche du bail (dette, credit disponible, caution)
+GET {{host}}/leases/{{leaseId}}
+Authorization: Bearer {{token}}
+
+### 9. Mes baux
+GET {{host}}/leases
+Authorization: Bearer {{token}}
+
+### 10. Cloturer le bail
+POST {{host}}/leases/{{leaseId}}/terminate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "date_fin": "2026-10-31", "type": "RESILIE" }
