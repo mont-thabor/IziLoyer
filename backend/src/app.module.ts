@@ -5,6 +5,7 @@ import { SmsModule } from './auth/sms/sms.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
 import { LeasesModule } from './leases/leases.module';
+import { PaymentsModule } from './payments/payments.module';
 import { PropertiesModule } from './properties/properties.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { PropertiesModule } from './properties/properties.module';
     AuthModule,
     PropertiesModule,
     LeasesModule,
+    PaymentsModule,
   ],
   controllers: [HealthController],
 })

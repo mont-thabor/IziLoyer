@@ -1,0 +1,54 @@
+### ============================================================
+### IziLoyer - essais manuels de l'etape 6 : paiement en especes (Voie C)
+### A lancer apres etape5.http (bail cree, bloc 6) : memes variables.
+### Extension VS Code requise : "REST Client"
+### ============================================================
+
+@host = http://localhost:3000
+### Coller ici le token et le numero de bail obtenus a l'etape 5 (ou relancer le login)
+@token = COLLER_LE_TOKEN
+@leaseId = COLLER_LE_NUMERO_DE_BAIL
+
+### 1. Detail de la dette AVANT paiement
+GET {{host}}/leases/{{leaseId}}/debt
+Authorization: Bearer {{token}}
+
+### 2. Enregistrer 50 000 F recus en especes.
+### idempotency_key : n'importe quelle chaine de 8 a 64 caracteres. La RELANCER avec la meme cle
+### ne cree PAS de second paiement (reponse "DUPLICATE").
+POST {{host}}/leases/{{leaseId}}/cash-payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "montant": 50000,
+  "date_remise": "2026-10-11",
+  "idempotency_key": "essai-especes-0001"
+}
+
+### 3. Montant superieur a la dette : reponse 409 "DEPASSEMENT" (rien n'est enregistre)
+POST {{host}}/leases/{{leaseId}}/cash-payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "montant": 900000,
+  "date_remise": "2026-10-11",
+  "idempotency_key": "essai-especes-0002"
+}
+
+### 4. Meme demande avec confirmation : l'excedent devient un avoir (quittance d'avance + SMS d'avoir)
+POST {{host}}/leases/{{leaseId}}/cash-payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "montant": 900000,
+  "date_remise": "2026-10-11",
+  "idempotency_key": "essai-especes-0002",
+  "confirmer_depassement": true
+}
+
+### 5. Fiche du bail : dette, credit disponible
+GET {{host}}/leases/{{leaseId}}
+Authorization: Bearer {{token}}
